@@ -1,55 +1,89 @@
 package com.example.servlet_exercise;
 
+import com.fasterxml.jackson.databind.*;
+
 import java.io.*;
 import javax.servlet.http.*;
-import javax.servlet.annotation.*;
-import java.sql.*;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class HelloServlet extends HttpServlet {
-    private String message;
-
-    public static void main(String[] args) throws SQLException {
-        String uname = "root";
-        String password = "";
-        String url = "jdbc:mysql://localhost:3306/internship";
-        String query = "select * from users";
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            //TODO Aut-generated catch block
-            e.printStackTrace();
-        }
-        //System.out.println("TEST");
-        try {
-            Connection con = DriverManager.getConnection(url);
-            Statement statement = con.createStatement();
-            ResultSet result = statement.executeQuery(query);
-            while(result.next()){
-            	String UserData = "";
-            	for(int i = 1; i <= 6; i++){
-            		UserData += result.getString(i) + ':';
-				}
-            	System.out.println(UserData);
-			}
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+    UserDAO userDAO = new UserDAO();
 
     public void init() {
-        message = "Greetings!";
+
+    }
+
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        String userString = "";
+        if ("POST".equalsIgnoreCase(request.getMethod())) {
+            userString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+        ObjectMapper om = new ObjectMapper();
+        //Convert the Json String to proper Java Object type
+        User u = om.readValue(userString, User.class);
+        u = userDAO.addUser(u);
+        String userJson = om.writeValueAsString(u);
+        //Return the output in JSON format
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        out.println(userJson);
+        out.close();
+    }
+
+    public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+        String userString = "";
+        if ("PUT".equalsIgnoreCase(request.getMethod())) {
+            userString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+        ObjectMapper om = new ObjectMapper();
+        //Convert the Json String to proper Java Object type
+        User u = om.readValue(userString, User.class);
+        userDAO.updateUser(u);
+        String userJson = om.writeValueAsString(u);
+        //Display the Updated User in JSON format
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        out.println(userJson);
+        out.close();
+    }
+
+    public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        PrintWriter out = response.getWriter();
+        String userString = "";
+        if ("DELETE".equalsIgnoreCase(request.getMethod())) {
+            userString = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        }
+        ObjectMapper om = new ObjectMapper();
+        JsonNode jsonNode = om.readTree(userString);
+        Long id = jsonNode.get("id").asLong();
+        userDAO.deleteUser(id);
+        //According to the REST API convention, DELETE method doesn't have an output, however you can uncomment
+        // the following line of code if you want to get an output upon using DELETE method
+//        out.println("Deleted user with the following id : " +  Long.toString(id));
+        out.close();
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("text/html");
 
-        // Hello
         PrintWriter out = response.getWriter();
-        out.println("<html><body>");
-        out.println("<h1>" + message + "</h1>");
-        out.println("</body></html>");
-        out.println("The list of the users is as follows:");
-        //code to print the list of users
+        List<User> users = userDAO.listUser();
+        //Code to print the list of Users
+        ObjectMapper om = new ObjectMapper();
+        String usersJson = "";
+        if (users != null) {
+            usersJson = om.writeValueAsString(users);
+        }
+        //Return the output in JSON format
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        out.println(usersJson);
+        out.close();
     }
 
     public void destroy() {

@@ -1,0 +1,22 @@
+<?xml version="1.0"?> <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.example.servlet_exercise.User" table="TBL_USER" catalog="internship">
+        <id name="id" type="java.lang.Long">
+            <column name="userid"/>
+            <generator class="identity"/>
+        </id>
+        <property name="last_name" type="string">
+            <column name="last_name" length="50"/>
+        </property>
+        <property name="first_name" type="string">
+            <column name="first_name" length="50"/>
+        </property>
+        <property name="password" type="string">
+            <column name="password" length="50"/>
+        </property>
+        <property name="username" type="string">
+            <column name="username" length="50"/>
+        </property>
+    </class>
+</hibernate-mapping>
